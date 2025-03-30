@@ -1,0 +1,8 @@
+PyMuPDF 
+openai 
+gTTS 
+python-pptx 
+moviepy 
+pdf2image 
+pydantic 
+python-dotenv
