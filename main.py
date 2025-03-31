@@ -1,9 +1,13 @@
+import sys
+sys.path.append('/Users/indreshgoswami/Downloads/gurugudance/Pdf_to_Video_Generator/venv/lib/python3.9/site-packages')
+
+
 import fitz  # PyMuPDF
 from openai import OpenAI
 from gtts import gTTS
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips
+from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, CompositeVideoClip
 from pdf2image import convert_from_path
 from pydantic import BaseModel, ValidationError
 import subprocess
@@ -12,6 +16,9 @@ import os
 import json
 import textwrap
 from dotenv import load_dotenv
+from PIL import Image
+import tempfile
+
 
 load_dotenv()
 
@@ -37,7 +44,7 @@ def chunk_text(text, max_chunk_chars=2500):
 
 def generate_chunk_content(chunk):
     prompt = (
-        "Return JSON with two fields: 'slides' (list of concise bullet points summarizing the content) "
+        "**Return JSON with two fields(list of string): 'slides' (list of concise bullet points summarizing the content) **"
         "and 'voice_over_script' (a detailed voice-over narration). "
         "Format: {\"slides\": [...], \"voice_over_script\": \"...\"}. "
         "Only output raw JSON, no markdown formatting like triple backticks.\n\n"
@@ -84,26 +91,75 @@ def generate_presentation(slide_chunks, ppt_file):
     prs.save(ppt_file)
 
 # Step 5: Convert Slides to Images
+# def slides_to_images(ppt_path, output_folder):
+#     subprocess.run([
+#         '/Applications/LibreOffice.app/Contents/MacOS/soffice', '--headless', '--convert-to', 'pdf', ppt_path, '--outdir', output_folder
+#     ], check=True)
+#     pdf_path = os.path.join(output_folder, os.path.splitext(os.path.basename(ppt_path))[0] + ".pdf")
+#     return [img.save(os.path.join(output_folder, f"slide_{i}.png"), 'PNG') or os.path.join(output_folder, f"slide_{i}.png")
+#             for i, img in enumerate(convert_from_path(pdf_path, dpi=200))]
+
 def slides_to_images(ppt_path, output_folder):
     subprocess.run([
-        'libreoffice', '--headless', '--convert-to', 'pdf', ppt_path, '--outdir', output_folder
+        '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+        '--headless',
+        '--convert-to', 'pdf:impress_pdf_Export',
+        '--outdir', output_folder,
+        ppt_path
     ], check=True)
     pdf_path = os.path.join(output_folder, os.path.splitext(os.path.basename(ppt_path))[0] + ".pdf")
     return [img.save(os.path.join(output_folder, f"slide_{i}.png"), 'PNG') or os.path.join(output_folder, f"slide_{i}.png")
             for i, img in enumerate(convert_from_path(pdf_path, dpi=200))]
 
+
 # Step 6: Generate Video
 
-def create_video(slide_imgs, audio_path, output_path):
+# def create_video(slide_imgs, audio_path, output_path):
+#     audio = AudioFileClip(audio_path)
+#     duration = audio.duration / len(slide_imgs)
+#     clips = [ImageClip(p).set_duration(duration) for p in slide_imgs]
+#     video = concatenate_videoclips(clips, method="compose").set_audio(audio)
+#     video.write_videofile(output_path, fps=24)
+
+# Update the create_video function
+def create_video(slide_imgs, audio_path, output_path, teacher_image_path):
     audio = AudioFileClip(audio_path)
     duration = audio.duration / len(slide_imgs)
-    clips = [ImageClip(p).set_duration(duration) for p in slide_imgs]
+    
+    # Load and resize teacher image
+    from PIL import Image
+    pil_img = Image.open(teacher_image_path)
+    pil_img = pil_img.resize((300, 200), Image.Resampling.LANCZOS)
+    
+    # Create temporary image file
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+        pil_img.save(temp_file.name)
+        teacher_img = ImageClip(temp_file.name).set_duration(audio.duration)
+    
+    clips = []
+    for img_path in slide_imgs:
+        slide_clip = ImageClip(img_path).set_duration(duration)
+        
+        # Position teacher avatar
+        teacher_position = (
+            slide_clip.size[0] - teacher_img.size[0] - 20,
+            slide_clip.size[1] - teacher_img.size[1] - 20
+        )
+        
+        # Create composite clip
+        composite = CompositeVideoClip([
+            slide_clip,
+            teacher_img.set_position(teacher_position)
+        ])
+        clips.append(composite)
+    
     video = concatenate_videoclips(clips, method="compose").set_audio(audio)
     video.write_videofile(output_path, fps=24)
 
+
 # Main
 
-def main(pdf_path):
+def main(pdf_path, teacher_image_path):
     text = extract_text_from_pdf(pdf_path)
     print("✅ Extracted text")
 
@@ -122,10 +178,20 @@ def main(pdf_path):
     generate_presentation(results, ppt_file)
     print("✅ Slides created")
 
+    # with tempfile.TemporaryDirectory() as tmpdir:
+    #     imgs = slides_to_images(ppt_file, tmpdir)
+    #     create_video(imgs, audio_file, "final_video.mp4")
+    #     print("✅ Video exported")
     with tempfile.TemporaryDirectory() as tmpdir:
         imgs = slides_to_images(ppt_file, tmpdir)
-        create_video(imgs, audio_file, "final_video.mp4")
+        create_video(imgs, audio_file, "final_video.mp4", teacher_image_path)
         print("✅ Video exported")
 
+# if __name__ == "__main__":
+#     main("./contents/DebouncinginJavaScript.pdf")
+
 if __name__ == "__main__":
-    main("/content/6_updated_1_updated_TypeScriptNotesForProfessionals.pdf")
+    main(
+        "./contents/variablesJavaScript.pdf",
+        "./contents/teacher_img.png"  # Add your teacher image path here
+    )
