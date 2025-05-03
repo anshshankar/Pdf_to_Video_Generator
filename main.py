@@ -128,4 +128,4 @@ def main(pdf_path):
         print("✅ Video exported")
 
 if __name__ == "__main__":
-    main("./contents/Redux_in_React.pdf")
+    main("./contents/Promises_in_JavaScript_Notes.pdf")
