@@ -1,6 +1,6 @@
 .env
 venv/
-.DS_Store/
+.DS_Store
 *.mp4
 *.pptx
 *.mp3
