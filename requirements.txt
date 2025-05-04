@@ -1,8 +1,18 @@
-PyMuPDF 
-openai 
-gTTS 
-python-pptx 
-moviepy 
-pdf2image 
-pydantic 
-python-dotenv
+# Python dependencies
+transformers
+diffusers
+torch
+torchvision
+moviepy
+gTTS
+Pillow
+openai
+gtts
+python-pptx
+PyMuPDF
+pdf2image
+mediapipe
+
+# Note: The following are system-level dependencies and cannot be installed via pip.
+# They need to be installed manually or via a shell script:
+# apt-get install -y libreoffice poppler-utils
