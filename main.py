@@ -86,7 +86,7 @@ def generate_presentation(slide_chunks, ppt_file):
 # Step 5: Convert Slides to Images
 def slides_to_images(ppt_path, output_folder):
     subprocess.run([
-        'libreoffice', '--headless', '--convert-to', 'pdf', ppt_path, '--outdir', output_folder
+        '/Applications/LibreOffice.app/Contents/MacOS/soffice', '--headless', '--convert-to', 'pdf', ppt_path, '--outdir', output_folder
     ], check=True)
     pdf_path = os.path.join(output_folder, os.path.splitext(os.path.basename(ppt_path))[0] + ".pdf")
     return [img.save(os.path.join(output_folder, f"slide_{i}.png"), 'PNG') or os.path.join(output_folder, f"slide_{i}.png")
@@ -128,4 +128,4 @@ def main(pdf_path):
         print("✅ Video exported")
 
 if __name__ == "__main__":
-    main("/content/6_updated_1_updated_TypeScriptNotesForProfessionals.pdf")
+    main("./contents/Promises_in_JavaScript_Notes.pdf")
