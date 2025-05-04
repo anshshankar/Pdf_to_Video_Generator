@@ -1,18 +1,8 @@
-# Python dependencies
-transformers
-diffusers
-torch
-torchvision
-moviepy
-gTTS
-Pillow
-openai
-gtts
-python-pptx
-PyMuPDF
-pdf2image
-mediapipe
-
-# Note: The following are system-level dependencies and cannot be installed via pip.
-# They need to be installed manually or via a shell script:
-# apt-get install -y libreoffice poppler-utils
+pymupdf
+openai==1.23.2
+gTTS==2.5.1
+python-pptx==0.6.23
+moviepy==1.0.3
+pdf2image==1.16.3
+pydantic==2.6.4
+python-dotenv==1.0.1
