@@ -11,6 +11,8 @@ import tempfile
 import os
 import json
 import textwrap
+from pydantic import BaseModel, Field
+from typing import List, Optional,Dict
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,7 +21,6 @@ client = OpenAI(
     base_url=os.getenv("ENDPOINT"),
     api_key=os.getenv("TOKEN"),
 )
-
 
 # Data models
 class SlideItem(BaseModel):
@@ -132,6 +133,7 @@ def generate_chunk_content(chunks, config):
             parsed_response['voice_over_script'] = "\n\n".join(parsed_response['voice_over_script'])
 
         validated_chunk = SlideChunk(**parsed_response)
+        print(validated_chunk)
     except (json.JSONDecodeError, ValidationError) as e:
         print(f"Parsing error: {e}\nResponse was: {response}")
         raise
@@ -139,176 +141,170 @@ def generate_chunk_content(chunks, config):
     print("✅ Summarization complete.")
     return validated_chunk
 
-# Step 3: Audio Generation
-# def generate_audio(script, filepath, language="en", voice_style="neutral"):
-#     print(f"Generating audio in {language}...")
-
-#     # Could be expanded to use different TTS engines based on voice_style
-#     tts = gTTS(script, lang=language)
-#     tts.save(filepath)
-
-#     # Optionally process audio for better quality (normalize, etc.)
-#     # This would require additional audio processing libraries
-
-#     print("✅ Audio generated.")
-#     return filepath
-
 # Step 3: Generate Audio from Script
 def generate_audio(script, output_file):
     tts = gTTS(script)
     tts.save(output_file)
 
-# Utility function to split audio for short segments
-def split_audio_script(full_script, segments):
-    print("Generating audio for short segments...")
-    segment_audios = []
-
-    for i, segment in enumerate(segments):
-        audio_path = f"temp/short_segment_{i}.mp3"
-        generate_audio(segment.script, audio_path)
-        segment_audios.append(audio_path)
-
-    print(f"✅ Generated {len(segment_audios)} segment audio files.")
-    return segment_audios
-
-# Step 4: Enhanced Slides Generation
-def generate_presentation(slide_content, pptx_path, config):
+def generate_presentation(slide_contents, pptx_path, config=None):
+    """
+    Generate a PowerPoint presentation from slide contents, which can be:
+    1. A list of SlideItem objects
+    2. A SlideChunk object
+    3. The raw parsed content from the paste.txt
+    
+    Parameters:
+    - slide_contents: Slide content in one of the above formats
+    - pptx_path: Path where the presentation will be saved
+    - config: Optional configuration parameters
+    
+    Returns:
+    - Path to the saved presentation
+    """
+    from pptx import Presentation
+    from pptx.util import Pt, Inches
+    from pptx.dml.color import RGBColor
+    
     print("Creating enhanced slides...")
     prs = Presentation()
-
-    # Set theme colors based on content analysis
-    theme_colors = slide_content.theme_colors or {
-        "primary": "1F497D",    # Dark blue
-        "secondary": "4F81BD",  # Medium blue
-        "accent": "C0504D",     # Red accent
-        "background": "FFFFFF", # White background
-        "text": "000000"        # Black text
-    }
-
+    
+    # Handle different possible input formats
+    if hasattr(slide_contents, 'slides'):
+        # This is a SlideChunk object
+        slides = slide_contents.slides
+        voice_over_script = slide_contents.voice_over_script
+        short_segments = slide_contents.short_segments
+        theme_colors = slide_contents.theme_colors if slide_contents.theme_colors else {}
+    elif isinstance(slide_contents, list) and all(hasattr(item, 'title') for item in slide_contents):
+        # This is a list of SlideItem objects
+        slides = slide_contents
+        voice_over_script = ""
+        short_segments = []
+        theme_colors = {}
+    elif isinstance(slide_contents, list) and len(slide_contents) > 0 and 'slides' in dir(slide_contents[0]):
+        # This might be a list containing one SlideChunk object
+        slides = slide_contents[0].slides
+        voice_over_script = slide_contents[0].voice_over_script
+        short_segments = slide_contents[0].short_segments
+        theme_colors = slide_contents[0].theme_colors if slide_contents[0].theme_colors else {}
+    else:
+        # Assume raw data format like in paste.txt
+        # Try to extract slides and other info
+        slides = slide_contents
+        voice_over_script = ""
+        short_segments = []
+        theme_colors = {}
+        
+        # Check if it's the raw parsed structure
+        if hasattr(slide_contents, 'voice_over_script'):
+            voice_over_script = slide_contents.voice_over_script
+        if hasattr(slide_contents, 'short_segments'):
+            short_segments = slide_contents.short_segments
+        if hasattr(slide_contents, 'theme_colors'):
+            theme_colors = slide_contents.theme_colors
+    
+    # Ensure we have default theme colors if not provided
+    if not theme_colors:
+        theme_colors = {
+            "primary": "#1F497D",
+            "secondary": "#4F81BD", 
+            "accent": "#C0504D",
+            "background": "#FFFFFF",
+            "text": "#000000"
+        }
+    
     # Strip '#' prefix from colors if present
     for key in theme_colors:
-        if theme_colors[key].startswith('#'):
-            theme_colors[key] = theme_colors[key][1:]  # Remove the '#' character
-
-    # Apply slide theme and layout adjustments based on config
-    for i, slide_item in enumerate(slide_content.slides):
-        # Add title slide for first slide
-        if i == 0:
-            slide = prs.slides.add_slide(prs.slide_layouts[0])  # Title slide
-            title = slide.shapes.title
-            subtitle = slide.placeholders[1]
-
-            title.text = slide_item.title
-            subtitle.text = "Generated Presentation"
-
-            # Apply styling to title slide
-            title.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-            title.text_frame.paragraphs[0].font.size = Pt(44)
-            title.text_frame.paragraphs[0].font.bold = True
-            title.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["primary"])
+        if isinstance(theme_colors[key], str) and theme_colors[key].startswith('#'):
+            theme_colors[key] = theme_colors[key][1:]
+    
+    # Add a title slide
+    title_slide = prs.slides.add_slide(prs.slide_layouts[0])
+    title = title_slide.shapes.title
+    subtitle = title_slide.placeholders[1]
+    
+    # Determine presentation title from first slide
+    presentation_title = "Presentation"
+    if slides and hasattr(slides[0], 'title'):
+        first_title = slides[0].title
+        if "Introduction" in first_title and "to" in first_title:
+            presentation_title = first_title.split("to")[1].strip()
         else:
-            # Content slides
-            slide = prs.slides.add_slide(prs.slide_layouts[1])  # Title and content
-            title = slide.shapes.title
-            content_placeholder = slide.placeholders[1]
-
-            title.text = slide_item.title
-
-            # Style the title
-            title.text_frame.paragraphs[0].font.size = Pt(36)
-            title.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["primary"])
-
-            # Clear existing content and add formatted content
-            content_frame = content_placeholder.text_frame
-            content_frame.clear()
-
-            # Add main content paragraph
-            p = content_frame.add_paragraph()
-            p.text = slide_item.content
-            p.font.size = Pt(24)
-            p.font.color.rgb = RGBColor.from_string(theme_colors["text"])
-
-            # Add key points as bullet points if available
-            if slide_item.key_points:
-                content_frame.add_paragraph().text = ""  # Add spacing
-
-                for point in slide_item.key_points:
-                    bullet_p = content_frame.add_paragraph()
-                    bullet_p.text = point
-                    bullet_p.font.size = Pt(20)
-                    bullet_p.level = 1  # Make it a bullet point
-
-            # Could add image placeholder here - in production version,
-            # would integrate with image generation API using image_prompt
-
+            presentation_title = first_title
+    
+    title.text = presentation_title
+    subtitle.text = "A Comprehensive Guide"
+    
+    # Style the title slide
+    title.text_frame.paragraphs[0].font.size = Pt(44)
+    title.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["primary"])
+    subtitle.text_frame.paragraphs[0].font.size = Pt(28)
+    subtitle.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["secondary"])
+    
+    # Process each slide
+    for i, slide_item in enumerate(slides):
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        title_shape = slide.shapes.title
+        content_placeholder = slide.placeholders[1]
+        
+        # Get slide title
+        slide_title = f"Slide {i+1}"
+        if hasattr(slide_item, 'title'):
+            slide_title = slide_item.title
+        
+        # Set the title
+        title_shape.text = slide_title
+        title_shape.text_frame.paragraphs[0].font.size = Pt(36)
+        title_shape.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["primary"])
+        
+        # Set the content
+        content_frame = content_placeholder.text_frame
+        content_frame.clear()
+        
+        # Add main content
+        slide_content = "Content"
+        if hasattr(slide_item, 'content'):
+            slide_content = slide_item.content
+            
+        p = content_frame.add_paragraph()
+        p.text = slide_content
+        p.font.size = Pt(24)
+        p.font.color.rgb = RGBColor.from_string(theme_colors["text"])
+        
+        # Add key points as bullets
+        key_points = []
+        if hasattr(slide_item, 'key_points'):
+            key_points = slide_item.key_points
+            
+        if key_points:
+            content_frame.add_paragraph().text = ""  # Add spacing
+            for point in key_points:
+                bullet_p = content_frame.add_paragraph()
+                bullet_p.text = point
+                bullet_p.font.size = Pt(20)
+                bullet_p.level = 1
+                bullet_p.font.color.rgb = RGBColor.from_string(theme_colors["secondary"])
+    
+   
+    
+    # Add a final slide
+    final_slide = prs.slides.add_slide(prs.slide_layouts[2])
+    final_title = final_slide.shapes.title
+    final_content = final_slide.placeholders[1]
+    
+    final_title.text = "Thank You!"
+    final_title.text_frame.paragraphs[0].font.size = Pt(40)
+    final_title.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["primary"])
+    
+    final_p = final_content.text_frame.add_paragraph()
+    final_p.text = "Any questions?"
+    final_p.font.size = Pt(32)
+    final_p.font.color.rgb = RGBColor.from_string(theme_colors["accent"])
+    
+    # Save the presentation
     prs.save(pptx_path)
-    print("✅ Enhanced slides created.")
+    print(f"✅ Enhanced slides created and saved to {pptx_path}")
     return pptx_path
-
-
-# -------------------- $$$$$$$ -----------------# -------------------- $$$$$$$ -----------------
-# # Pydantic schema for validation
-# class SlideChunk(BaseModel):
-#     slides: list[str]
-#     voice_over_script: str
-
-# # Step 1: Extract Text from PDF
-# def extract_text_from_pdf(pdf_path):
-#     doc = fitz.open(pdf_path)
-#     return "".join(page.get_text() for page in doc)
-
-# # Step 2: Chunk and summarize text for slides and voiceover
-# def chunk_text(text, max_chunk_chars=2500):
-#     paragraphs = textwrap.wrap(text, max_chunk_chars, break_long_words=False, replace_whitespace=False)
-#     return paragraphs
-
-# def generate_chunk_content(chunk):
-#     prompt = (
-#         "Return JSON with two fields: 'slides' (list of concise bullet points summarizing the content) "
-#         "and 'voice_over_script' (a detailed voice-over narration). "
-#         "Format: {\"slides\": [...], \"voice_over_script\": \"...\"}. "
-#         "Only output raw JSON, no markdown formatting like triple backticks.\n\n"
-#         f"Content:\n{chunk}\n\nJSON Output:"
-#     )
-#     response = client.chat.completions.create(
-#         model="gpt-4o",
-#         messages=[{"role": "user", "content": prompt}],
-#         temperature=0.2,
-#         max_tokens=4000
-#     ).choices[0].message.content.strip()
-
-#     if response.startswith("```json"):
-#         response = response.lstrip("```json").rstrip("```").strip()
-#     elif response.startswith("```"):
-#         response = response.lstrip("```").rstrip("```").strip()
-
-#     try:
-#         parsed = json.loads(response)
-#         validated = SlideChunk(**parsed)
-#     except (json.JSONDecodeError, ValidationError) as e:
-#         raise ValueError(f"GPT format error: {e}\nRaw: {response}")
-
-#     return validated
-
-# # Step 3: Generate Audio from Script
-# def generate_audio(script, output_file):
-#     tts = gTTS(script)
-#     tts.save(output_file)
-
-# # Step 4: Generate Multi-Slide Presentation
-# def generate_presentation(slide_chunks, ppt_file):
-#     prs = Presentation()
-#     for i, chunk in enumerate(slide_chunks):
-#         slide = prs.slides.add_slide(prs.slide_layouts[1])
-#         slide.shapes.title.text = f"Slide {i+1}"
-#         frame = slide.placeholders[1].text_frame
-#         frame.clear()
-#         for point in chunk.slides:
-#             p = frame.add_paragraph()
-#             p.text = point
-#             p.font.size = Pt(24)
-#             p.space_after = Pt(12)
-#     prs.save(ppt_file)
 
 # Step 5: Convert Slides to Images
 def slides_to_images(ppt_path, output_folder):
@@ -338,8 +334,6 @@ class Args:
     language = 'en'
     voice = 'enthusiastic'
     output = '/content/output/'
-
-
 
 def main(pdf_path):
 
@@ -375,4 +369,4 @@ def main(pdf_path):
         print("✅ Video exported")
 
 if __name__ == "__main__":
-    main("./contents/Redux_in_React.pdf")
+    main("./contents/Promises_in_JavaScript_Notes.pdf")
