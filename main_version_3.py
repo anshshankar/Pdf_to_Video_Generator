@@ -15,6 +15,7 @@ from yt_shorts import process_shorts_from_results
 from presentation import generate_presentation, slides_to_images
 import time
 import requests
+from audio import generate_audio
 
 load_dotenv()
 
@@ -88,7 +89,7 @@ def generate_chunk_content(chunk, config):
         "1. 'slides': list of objects with 'title', 'content', 'key_points' (list of bullet points), "
         "and 'voice_over' (narration script for this specific slide)\n"
         "2. 'short_segments': 3-5 stand-alone segments for short-form videos (under 2 minutes each) "
-        "with 'title', 'content', 'script', and 'duration' fields\n"
+        "with 'title', 'content', 'script', and 'duration' (in seconds) fields\n"
         "3. 'theme_colors': suggested color scheme (primary, secondary, accent, background, text)\n\n"
         f"Content:\n{chunk}\n\n"
         "Respond with valid JSON only. Keep all content factual and based on the input material."
@@ -182,27 +183,56 @@ def main():
     ppt_file = "presentation.pptx"
     generate_presentation(results, ppt_file, config)
     with tempfile.TemporaryDirectory() as tmpdir:
-        slide_imgs = slides_to_images(ppt_file, tmpdir)
+        slide_imgs = slides_to_images(ppt_file, tmpdir)  # Convert slides to images (assumed needed elsewhere)
 
-        jobs = []
+        jobs = []  # List to store job details, populated one by one
         for slide in all_slides:
-            job_id = submit_job(args.api_path, args.avatar, slide.voice_over)
-            jobs.append({"job_id": job_id, "slide": slide, "status": "processing", "video_path": None})
+            # Generate a unique audio file for each slide
+            audio_file = os.path.join(tmpdir, f"voice_{slide.title}.mp3")
+            generate_audio(slide.voice_over, audio_file)
+            
+            # Submit the job and get its ID
+            job_id = submit_job(args.api_path, args.avatar, audio_file)
+            
+            # Wait for this job to complete
+            status = "processing"
+            while status == "processing":
+                time.sleep(60)  # Wait 60 seconds between status checks
+                status = check_status(args.api_path, job_id)
+                if status == "completed":
+                    # Download the video upon completion
+                    video_path = os.path.join(tmpdir, f"presenter_{slide.title}.mp4")
+                    download_video(args.api_path, job_id, video_path)
+                    # Store job details
+                    jobs.append({"job_id": job_id, "slide": slide, "status": "processed", "video_path": video_path})
+                elif status == "failed":
+                    print(f"Job for slide {slide.title} failed")
+                    # Store failed job details
+                    jobs.append({"job_id": job_id, "slide": slide, "status": "failed", "video_path": None})
+    # with tempfile.TemporaryDirectory() as tmpdir:
+    #     slide_imgs = slides_to_images(ppt_file, tmpdir)
 
-        # Poll for job statuses
-        while any(job["status"] != "completed" for job in jobs):
-            for job in jobs:
-                if job["status"] == "processing":
-                    status = check_status(args.api_path, job["job_id"])
-                    if status == "completed":
-                        video_path = os.path.join(tmpdir, f"presenter_{job['slide'].title}.mp4")
-                        download_video(args.api_path, job["job_id"], video_path)
-                        job["video_path"] = video_path
-                        job["status"] = "processed"
-                    elif status == "failed":
-                        print(f"Job {job['job_id']} failed")
-                        job["status"] = "failed"
-            time.sleep(60)
+    #     jobs = []
+    #     for slide in all_slides:
+    #         audio_file = "voice.mp3"
+    #         generate_audio(slide.voice_over, audio_file)
+    #         job_id = submit_job(args.api_path, args.avatar, audio_file)
+    #         jobs.append({"job_id": job_id, "slide": slide, "status": "processing", "video_path": None})
+
+    #     # Poll for job statuses
+    #     while any(job["status"] != "completed" for job in jobs):
+    #         for job in jobs:
+    #             if job["status"] == "processing":
+    #                 status = check_status(args.api_path, job["job_id"])
+    #                 if status == "completed":
+    #                     video_path = os.path.join(tmpdir, f"presenter_{job['slide'].title}.mp4")
+    #                     download_video(args.api_path, job["job_id"], video_path)
+    #                     job["video_path"] = video_path
+    #                     job["status"] = "processed"
+    #                 elif status == "failed":
+    #                     print(f"Job {job['job_id']} failed")
+    #                     job["status"] = "failed"
+    #         time.sleep(60)
 
         # Create video clips
         clips = []
@@ -232,14 +262,14 @@ def main():
         # print("✅ YouTube Shorts generated")
 
 class Args:
-    pdf_path = '/content/LLM_Overview.pdf'
-    avatar = '/content/man.png'
+    pdf_path = 'contents/ES6_and_Modern_JS_Notes.pdf'
+    avatar = 'contents/meeb.jpeg'
     music = '/contents/breath-of-life_10-minutes-320859.mp3'
     theme = 'creative'
     language = 'en'
     voice = 'enthusiastic'
     output = '/content/output/'
-    api_path = ''
+    api_path = 'https://da67-34-87-84-12.ngrok-free.app'
 
 if __name__ == "__main__":
     main()
