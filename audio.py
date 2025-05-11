@@ -1,5 +1,53 @@
 from gtts import gTTS
 
-def generate_audio(script, output_file):
-    tts = gTTS(script)
-    tts.save(output_file)
+
+import asyncio
+import edge_tts
+
+def generate_audio(script, output_file, voice="en-GB-RyanNeural", rate="+30%"):
+    """
+    Generate realistic speech with control over voice characteristics using edge-tts Python API.
+
+    Parameters:
+    script: Your text script
+    output_file: Output filename (default: output.mp3)
+    voice: Voice selection (default: en-GB-RyanNeural - deep male voice)
+    rate: Speaking rate adjustment (default: +30% faster)
+    """
+    async def _generate():
+        communicate = edge_tts.Communicate(script, voice, rate=rate)
+        await communicate.save(output_file)
+    
+    asyncio.run(_generate())
+
+# def generate_audio(script, output_file):
+#     tts = gTTS(script)
+#     tts.save(output_file)
+
+# import subprocess
+
+# def generate_audio(script, output_file, voice="en-GB-RyanNeural", rate="+30%"):
+#     """
+#     Generate realistic speech with control over voice characteristics
+
+#     Parameters:
+#     script: Your text script
+#     output_file: Output filename (default: output.mp3)
+#     voice: Voice selection (default: en-GB-RyanNeural - deep male voice)
+#     rate: Speaking rate adjustment (default: +50% faster)
+#     """
+#     command = [
+#         'edge-tts',
+#         '--text', script,
+#         '--write-media', output_file,
+#         '--voice', voice,
+#         '--rate', rate
+#     ]
+
+#     subprocess.run(command, check=True)
+
+# Example usage
+# text = """Hello, this is a demonstration of a deep male voice
+# with natural-sounding speech synthesis.
+# Notice the improved intonation and realistic pacing."""
+

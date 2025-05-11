@@ -183,9 +183,9 @@ def main():
     print(f"✅ Created {len(yt_shorts)} YouTube shorts videos")
 
 class Args:
-    pdf_path = '/content/LLM_Overview.pdf'  # <-- Update with your actual PDF path
+    pdf_path = 'contents/ES6_and_Modern_JS_Notes.pdf'  # <-- Update with your actual PDF path
     avatar = '/content/man.png'  # <-- Update with your avatar image
-    music = '/contents/breath-of-life_10-minutes-320859.mp3'  # Optional
+    music = 'contents/breath-of-life_10-minutes-320859.mp3'  # Optional
     theme = 'creative'
     language = 'en'
     voice = 'enthusiastic'
