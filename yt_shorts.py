@@ -5,7 +5,6 @@ import tempfile
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import json
-from pydub import AudioSegment
 import time
 import shutil
 from moviepy.editor import ImageSequenceClip, AudioFileClip, CompositeVideoClip, TextClip, ImageClip, concatenate_videoclips
@@ -57,8 +56,6 @@ def create_short_video(segment, index, theme_colors):
         create_short_clip(frames, audio_file, output_path, segment.duration)
         
         return output_path
-
-
 
 def generate_short_video_frames(segment, frames_dir, theme_colors):
     """
@@ -166,9 +163,8 @@ def create_short_clip(frames, audio_file, output_path, duration):
     return output_path
 
 def main():
-
-    
     # Process the shorts from the results
+
     video_paths = process_shorts_from_results(results_data)
     
     print(f"✅ Created {len(video_paths)} short videos.")

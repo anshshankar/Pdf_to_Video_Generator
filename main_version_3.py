@@ -88,7 +88,7 @@ def generate_chunk_content(chunk, config):
         "1. 'slides': list of objects with 'title', 'content', 'key_points' (list of bullet points), "
         "and 'voice_over' (narration script for this specific slide)\n"
         "2. 'short_segments': 3-5 stand-alone segments for short-form videos (under 2 minutes each) "
-        "with 'title', 'content', 'script', and 'duration' fields\n"
+        "with 'title', 'content', 'script', and 'duration' (in seconds) fields\n"
         "3. 'theme_colors': suggested color scheme (primary, secondary, accent, background, text)\n\n"
         f"Content:\n{chunk}\n\n"
         "Respond with valid JSON only. Keep all content factual and based on the input material."
