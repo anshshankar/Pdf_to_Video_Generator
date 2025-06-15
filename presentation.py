@@ -21,6 +21,7 @@ def generate_presentation(slide_contents, pptx_path, config=None):
     - Path to the saved presentation
     """
     
+/Users/indreshgoswami/Downloads/pdfvideo/Pdf_to_Video_Generator/presentation.pptx
     print("Creating enhanced slides...")
     prs = Presentation()
     
