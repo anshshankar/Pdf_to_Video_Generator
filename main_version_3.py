@@ -16,6 +16,7 @@ from presentation import generate_presentation, slides_to_images
 from audio import generate_audio
 import time
 import requests
+import json
 
 load_dotenv()
 
@@ -121,6 +122,7 @@ def generate_chunk_content(chunk, config):
 
 def main():
     args = Args()
+    os.makedirs("Output", exist_ok=True)
     config = VideoConfig(
         theme=args.theme,
         language=args.language,
@@ -131,27 +133,24 @@ def main():
     chunks = chunk_text(text)
     results = [generate_chunk_content(chunk, config) for chunk in chunks]
 
+    with open("Output/chunk_results.json", "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=4)
+
     # Flatten all slides from all chunks
     all_slides = [slide for result in results for slide in result.slides]
 
     # Generate presentation and slide images
-    ppt_file = "presentation.pptx"
+    ppt_file = "Output/presentation.pptx"
     generate_presentation(results, ppt_file, config)
     with tempfile.TemporaryDirectory() as tmpdir:
         slide_imgs = slides_to_images(ppt_file, tmpdir)
 
-        jobs = []
-
-
-        # Create video clips
         clips = []
         for i, slide in enumerate(all_slides):
             slide_img = slide_imgs[i]
-            audio_path = f"{i}_audio.mp3"
+            audio_path = f"Output/{i}_audio.mp3"
             generate_audio(slide.voice_over,audio_path)
             audio = AudioFileClip(audio_path)
-
-           
             image_clip = ImageClip(slide_img).set_duration(audio.duration)
            
             final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
@@ -161,7 +160,7 @@ def main():
         final_video = concatenate_videoclips(clips, method="compose")
         #final_video.write_videofile("final_video.mp4", fps=24)
         final_video.write_videofile(
-                 "final_video2.mp4",
+                 "Output/final_video2.mp4",
                  fps=24,
                  codec="libx264",         # Good video codec
                  audio_codec="aac",       # Ensure AAC audio
