@@ -28,32 +28,32 @@ def generate_presentation(slide_contents, pptx_path, config=None):
     if hasattr(slide_contents, 'slides'):
         # This is a SlideChunk object
         slides = slide_contents.slides
-        voice_over_script = slide_contents.voice_over_script
-        short_segments = slide_contents.short_segments
+        # voice_over_script = slide_contents.voice_over_script
+        # short_segments = slide_contents.short_segments
         theme_colors = slide_contents.theme_colors if slide_contents.theme_colors else {}
     elif isinstance(slide_contents, list) and all(hasattr(item, 'title') for item in slide_contents):
         # This is a list of SlideItem objects
         slides = slide_contents
-        voice_over_script = ""
-        short_segments = []
+        # voice_over_script = ""
+        # short_segments = []
         theme_colors = {}
     elif isinstance(slide_contents, list) and len(slide_contents) > 0 and 'slides' in dir(slide_contents[0]):
         # This might be a list containing one SlideChunk object
         slides = slide_contents[0].slides
-        voice_over_script = slide_contents[0].voice_over_script
-        short_segments = slide_contents[0].short_segments
+        # voice_over_script = slide_contents[0].voice_over_script
+        # short_segments = slide_contents[0].short_segments
         theme_colors = slide_contents[0].theme_colors if slide_contents[0].theme_colors else {}
     else:
         slides = slide_contents
-        voice_over_script = ""
-        short_segments = []
+        # voice_over_script = ""
+        # short_segments = []
         theme_colors = {}
         
         # Check if it's the raw parsed structure
-        if hasattr(slide_contents, 'voice_over_script'):
-            voice_over_script = slide_contents.voice_over_script
-        if hasattr(slide_contents, 'short_segments'):
-            short_segments = slide_contents.short_segments
+        # if hasattr(slide_contents, 'voice_over_script'):
+        #     voice_over_script = slide_contents.voice_over_script
+        # if hasattr(slide_contents, 'short_segments'):
+        #     short_segments = slide_contents.short_segments
         if hasattr(slide_contents, 'theme_colors'):
             theme_colors = slide_contents.theme_colors
     

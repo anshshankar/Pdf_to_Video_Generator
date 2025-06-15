@@ -118,6 +118,51 @@ def generate_chunk_content(chunk, config):
     print("✅ Structured content generated.")
     return validated_chunk
 
+# API Integration Functions (Hypothetical Endpoints)
+# def submit_job(api_path, image_path, audio_path, head_name=None):
+#     with open(image_path, 'rb') as image_file, open(audio_path, 'rb') as audio_file:
+#         files = {
+#             'image': ('image.jpg', image_file, 'image/jpeg'),
+#             'audio': ('audio.mp3', audio_file, 'audio/mpeg'),
+#         }
+#         data = {}
+#         if head_name:
+#             data['head_name'] = head_name
+
+#         response = requests.post(
+#             f"{api_path}/generate-video/",
+#             files=files,
+#             data=data,
+#             headers={}
+#         )
+
+#         response.raise_for_status()
+#         return response.json()["job_id"]
+
+def check_status(api_path: str, job_id: str) -> dict:
+    """
+    Poll the job-status endpoint and return the full status payload.
+    """
+    url = f"{api_path}/job-status/{job_id}"
+    headers = {}
+    resp = requests.get(url, headers=headers)
+    resp.raise_for_status()
+    # returns something like {"status": "completed", "download_url": "/download-video/<job_id>"}
+    return resp.json()
+
+def download_video(api_path: str, job_id: str, save_path: str):
+    """
+    Download the completed video via streaming and save it locally.
+    """
+    url = f"{api_path}/download-video/{job_id}"
+    headers = {}
+    with requests.get(url, headers=headers, stream=True) as resp:
+        resp.raise_for_status()
+        with open(save_path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=8_192):
+                if chunk:
+                    f.write(chunk)
+    return save_path
 
 def main():
     args = Args()
@@ -141,7 +186,24 @@ def main():
         slide_imgs = slides_to_images(ppt_file, tmpdir)
 
         jobs = []
+        # for slide in all_slides:
+        #     job_id = submit_job(args.api_path, args.avatar, slide.voice_over)
+        #     jobs.append({"job_id": job_id, "slide": slide, "status": "processing", "video_path": None})
 
+        # # Poll for job statuses
+        # while any(job["status"] != "completed" for job in jobs):
+        #     for job in jobs:
+        #         if job["status"] == "processing":
+        #             status = check_status(args.api_path, job["job_id"])
+        #             if status == "completed":
+        #                 video_path = os.path.join(tmpdir, f"presenter_{job['slide'].title}.mp4")
+        #                 download_video(args.api_path, job["job_id"], video_path)
+        #                 job["video_path"] = video_path
+        #                 job["status"] = "processed"
+        #             elif status == "failed":
+        #                 print(f"Job {job['job_id']} failed")
+        #                 job["status"] = "failed"
+        #     time.sleep(60)
 
         # Create video clips
         clips = []
@@ -151,22 +213,18 @@ def main():
             generate_audio(slide.voice_over,audio_path)
             audio = AudioFileClip(audio_path)
 
-           
+            # presenter_video_path = next(job["video_path"] for job in jobs if job["slide"] == slide)
+            # presenter_clip = VideoFileClip(presenter_video_path)
             image_clip = ImageClip(slide_img).set_duration(audio.duration)
-           
+            # presenter_clip = presenter_clip.resize(height=image_clip.h // 2)
+            # presenter_clip = presenter_clip.set_position(("right", "bottom"))
+            #final_clip = CompositeVideoClip([image_clip, presenter_clip]).set_audio(presenter_clip.audio)
             final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
             clips.append(final_clip)
 
         # Concatenate all clips
         final_video = concatenate_videoclips(clips, method="compose")
-        #final_video.write_videofile("final_video.mp4", fps=24)
-        final_video.write_videofile(
-                 "final_video2.mp4",
-                 fps=24,
-                 codec="libx264",         # Good video codec
-                 audio_codec="aac",       # Ensure AAC audio
-                 audio_bitrate="192k"     # Reasonable audio quality
-        )
+        final_video.write_videofile("final_video.mp4", fps=24)
         print("✅ Main Video exported")
 
         # # Generate YouTube Shorts
