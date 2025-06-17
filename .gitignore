@@ -4,3 +4,4 @@ venv/
 *.mp4
 *.pptx
 *.mp3
+.idea/
