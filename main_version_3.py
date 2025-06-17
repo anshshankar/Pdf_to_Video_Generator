@@ -133,8 +133,10 @@ def main():
     chunks = chunk_text(text)
     results = [generate_chunk_content(chunk, config) for chunk in chunks]
 
+    serializable_results = [chunk.model_dump() for chunk in results]
+
     with open("Output/chunk_results.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=4)
+        json.dump(serializable_results, f, ensure_ascii=False, indent=4)
 
     # Flatten all slides from all chunks
     all_slides = [slide for result in results for slide in result.slides]
