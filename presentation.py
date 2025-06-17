@@ -77,6 +77,7 @@ def generate_presentation(slide_contents, pptx_path, config=None):
     
     title.text = presentation_title
     subtitle.text = "A Comprehensive Guide"
+    content_about = title.taxt
     
     # Style the title slide
     title.text_frame.paragraphs[0].font.size = Pt(44)
@@ -140,14 +141,14 @@ def generate_presentation(slide_contents, pptx_path, config=None):
     final_title.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(theme_colors["primary"])
     
     final_p = final_content.text_frame.add_paragraph()
-    final_p.text = "Any questions?"
+    final_p.text = "Please Like, Share And Subscribe?"
     final_p.font.size = Pt(32)
     final_p.font.color.rgb = RGBColor.from_string(theme_colors["accent"])
     
     # Save the presentation
     prs.save(pptx_path)
     print(f"✅ Enhanced slides created and saved to {pptx_path}")
-    return pptx_path
+    return content_about
 
 def slides_to_images(ppt_path, output_folder):
     subprocess.run([

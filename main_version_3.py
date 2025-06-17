@@ -143,13 +143,26 @@ def main():
 
     # Generate presentation and slide images
     ppt_file = "Output/presentation.pptx"
-    generate_presentation(results, ppt_file, config)
+    topic = generate_presentation(results, ppt_file, config)
+
+    intro_voice_over = f"Hey folks! Welcome back to the channel. Today, we’re diving into something super cool — {topic}. Let’s get into it!"
+    end_voice_over = "Thanks for hanging out with us! If you’re vibing with the content, hit that like button, share it with your crew, and smash that subscribe. Drop your thoughts or ideas in the comments — we love hearing from you!"
+
     with tempfile.TemporaryDirectory() as tmpdir:
         slide_imgs = slides_to_images(ppt_file, tmpdir)
 
         clips = []
+
+        slide_img = slide_imgs[0]
+        audio_path = f"Output/intro_audio.mp3"
+        generate_audio(intro_voice_over,audio_path)
+        audio = AudioFileClip(audio_path)
+        image_clip = ImageClip(slide_img).set_duration(audio.duration)
+        final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
+        clips.append(final_clip)
+
         for i, slide in enumerate(all_slides):
-            slide_img = slide_imgs[i]
+            slide_img = slide_imgs[i+1]
             audio_path = f"Output/{i}_audio.mp3"
             generate_audio(slide.voice_over,audio_path)
             audio = AudioFileClip(audio_path)
@@ -157,6 +170,14 @@ def main():
            
             final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
             clips.append(final_clip)
+
+        slide_img = slide_imgs[-1]
+        audio_path = f"Output/ending_audio.mp3"
+        generate_audio(end_voice_over,audio_path)
+        audio = AudioFileClip(audio_path)
+        image_clip = ImageClip(slide_img).set_duration(audio.duration)
+        final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
+        clips.append(final_clip)
 
         # Concatenate all clips
         final_video = concatenate_videoclips(clips, method="compose")
