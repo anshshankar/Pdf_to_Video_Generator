@@ -36,6 +36,7 @@ class SlideItem(BaseModel):
 class SlideChunk(BaseModel):
     slides: List[SlideItem]
     theme_colors: Optional[Dict[str, str]] = None
+    description: str
 
 class VideoConfig(BaseModel):
     theme: str = "professional"
@@ -71,6 +72,7 @@ def generate_chunk_content(topic, config):
         "1. 'slides': list of objects with 'title', 'content', 'key_points' (list of bullet points), "
         "and 'voice_over' (narration script for this specific slide)\n"
         "2. 'theme_colors': suggested color scheme (primary, secondary, accent, background, text)\n\n"
+        "3. description: A short description of the topic, including relevant hashtags for SEO, in string format."
         f"Topic:\n{topic}\n\n"
         "Respond with valid JSON only. Keep all content factual and written in easy-to-understand language, suitable for general audiences."
     )
@@ -130,19 +132,24 @@ def main():
             voice_style=args.voice,
             include_background_music=bool(args.music)
         )
-
+        os.makedirs(f"Output/{topic}", exist_ok=True)
         # Generate results
         results = [generate_chunk_content(topic, config)]
+
+        with open(f"Output/{topic}/description.txt", "w", encoding="utf-8") as file:
+            description = str(results[0].description)
+            file.write(description)
+            
         serializable_results = [chunk.model_dump() for chunk in results]
 
-        with open("Output/chunk_results.json", "w", encoding="utf-8") as f:
+        with open(f"Output/{topic}/chunk_results.json", "w", encoding="utf-8") as f:
             json.dump(serializable_results, f, ensure_ascii=False, indent=4)
 
         all_slides = [slide for result in results for slide in result.slides]
 
         # Generate presentation
         
-        os.makedirs(f"Output/{topic}", exist_ok=True)
+        
         ppt_file = f"Output/{topic}/presentation.pptx"
         generate_presentation(results, ppt_file, config)
 
