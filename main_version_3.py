@@ -100,7 +100,7 @@ def generate_chunk_content(topic, config):
     return validated_chunk
 
 
-EXCEL_FILE = "topics.xlsx"
+EXCEL_FILE = "contents/topic.xlsx"
 
 def main():
     args = Args()
@@ -144,7 +144,7 @@ def main():
         
         os.makedirs(f"Output/{topic}", exist_ok=True)
         ppt_file = f"Output/{topic}/presentation.pptx"
-        generate_presentation(results, ppt_file, config,topic)
+        generate_presentation(results, ppt_file, config)
 
         # Create voice overs
         intro_voice_over = f"Hey folks! Welcome back to the channel. Today, we’re diving into something super cool — {topic}. Let’s get into it!"

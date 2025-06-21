@@ -1,0 +1,93 @@
+[
+    {
+        "slides": [
+            {
+                "title": "Welcome to Type Coercion!",
+                "content": "Let's dive into the world of type coercion—a key concept in programming that helps computers handle different data types.",
+                "key_points": [
+                    "Type coercion is automatic data type conversion.",
+                    "It's common in many programming languages.",
+                    "Helps code run smoothly, but can cause surprises!"
+                ],
+                "voice_over": "Hey everyone! Get ready to explore type coercion—a fascinating process where computers automatically change one data type into another. It's everywhere in programming, making things easier, but sometimes causing unexpected results. Let's see how it works!"
+            },
+            {
+                "title": "What is Type Coercion?",
+                "content": "Type coercion happens when a programming language automatically converts a value from one data type to another.",
+                "key_points": [
+                    "Data types include numbers, strings, booleans, etc.",
+                    "Conversion happens behind the scenes.",
+                    "Also called 'implicit conversion.'"
+                ],
+                "voice_over": "So, what exactly is type coercion? Imagine you mix numbers and words in your code. The computer needs to figure out how to handle that! Type coercion is when the language quietly changes a value's type so your code keeps working."
+            },
+            {
+                "title": "Why Does Type Coercion Matter?",
+                "content": "Type coercion helps programs handle mixed data types, but can also lead to bugs if you're not careful.",
+                "key_points": [
+                    "Makes code more flexible.",
+                    "Can cause unexpected behavior.",
+                    "Understanding it helps you write better code."
+                ],
+                "voice_over": "Why should you care about type coercion? Well, it makes your code more flexible, but it can also trip you up with weird results! Knowing how it works helps you avoid those sneaky bugs."
+            },
+            {
+                "title": "Type Coercion in Action: JavaScript Example",
+                "content": "JavaScript is famous for its type coercion. Let's see some examples!",
+                "key_points": [
+                    "'5' + 2 becomes '52' (number turns into a string)",
+                    "'5' - 2 becomes 3 (string turns into a number)",
+                    "true + 1 becomes 2 (boolean turns into a number)"
+                ],
+                "voice_over": "Check this out! In JavaScript, if you add the string '5' and the number 2, you get '52'—the number becomes a string! But if you subtract, '5' - 2 gives you 3, because the string turns into a number. Even booleans like true can become numbers—true plus 1 equals 2!"
+            },
+            {
+                "title": "Implicit vs. Explicit Coercion",
+                "content": "Type coercion can be automatic (implicit) or manual (explicit).",
+                "key_points": [
+                    "Implicit: Language converts types for you.",
+                    "Explicit: You convert types yourself (e.g., Number('5')).",
+                    "Explicit is safer and more predictable."
+                ],
+                "voice_over": "There are two flavors of type coercion: implicit, where the language does it for you, and explicit, where you tell the computer exactly what to do. Explicit coercion is usually safer, so you know exactly what's happening in your code."
+            },
+            {
+                "title": "Common Pitfalls",
+                "content": "Type coercion can cause unexpected results if you're not paying attention.",
+                "key_points": [
+                    "'5' + true = '5true' (string + boolean becomes string)",
+                    "null == undefined is true (but they're not the same type!)",
+                    "0 == false is true (number and boolean are coerced)"
+                ],
+                "voice_over": "Watch out! Type coercion can lead to some head-scratching results. For example, adding '5' and true gives you '5true', and comparing null and undefined says they're equal—even though they're different types! Always be alert for these surprises."
+            },
+            {
+                "title": "Best Practices",
+                "content": "How can you avoid type coercion headaches?",
+                "key_points": [
+                    "Use explicit conversion when possible.",
+                    "Know your language's coercion rules.",
+                    "Use strict equality (===) in JavaScript."
+                ],
+                "voice_over": "To stay out of trouble, use explicit conversion whenever you can, and get familiar with your language's coercion rules. In JavaScript, using triple equals (===) helps you avoid accidental coercion."
+            },
+            {
+                "title": "Wrap-Up: Why Type Coercion Rocks",
+                "content": "Type coercion is powerful, but needs respect! Use it wisely for clean, bug-free code.",
+                "key_points": [
+                    "It makes programming flexible.",
+                    "Can cause confusion if misused.",
+                    "Understanding it makes you a better coder!"
+                ],
+                "voice_over": "And that's a wrap! Type coercion is a super useful tool that makes programming more flexible, but it can be tricky. Mastering it will help you write smarter, safer code. Thanks for joining this energetic journey into type coercion!"
+            }
+        ],
+        "theme_colors": {
+            "primary": "#FF6F00",
+            "secondary": "#00B8D4",
+            "accent": "#FFD600",
+            "background": "#FFFFFF",
+            "text": "#212121"
+        }
+    }
+]
