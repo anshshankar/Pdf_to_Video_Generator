@@ -202,7 +202,7 @@ def main():
         # print("✅ YouTube Shorts generated")
 
 class Args:
-    pdf_path = 'contents/Basics_of_Machine_Learning_Notes.pdf'
+    pdf_path = 'contents/ainotes.pdf'
     avatar = '/content/man.png'
     music = '/contents/breath-of-life_10-minutes-320859.mp3'
     theme = 'creative'

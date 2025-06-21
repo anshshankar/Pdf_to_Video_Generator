@@ -77,7 +77,7 @@ def generate_presentation(slide_contents, pptx_path, config=None):
     
     title.text = presentation_title
     subtitle.text = "A Comprehensive Guide"
-    content_about = title.taxt
+    content_about = title.text
     
     # Style the title slide
     title.text_frame.paragraphs[0].font.size = Pt(44)

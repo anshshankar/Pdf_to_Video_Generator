@@ -1,0 +1,139 @@
+[
+    {
+        "slides": [
+            {
+                "title": "Welcome to AI Basics!",
+                "content": "Dive into the world of Artificial Intelligence—where machines learn, reason, and solve problems just like us!",
+                "key_points": [
+                    "AI mimics human intelligence",
+                    "Performs learning, reasoning, perception, and language tasks",
+                    "Powering innovations all around us"
+                ],
+                "voice_over": "Get ready to explore the fascinating universe of Artificial Intelligence! From learning and reasoning to understanding language, AI is transforming our world in ways you never imagined. Let's jump in and see what makes AI so powerful!"
+            },
+            {
+                "title": "What is Artificial Intelligence?",
+                "content": "AI refers to computer systems that perform tasks requiring human intelligence—like learning, reasoning, problem-solving, perception, and language understanding.",
+                "key_points": [
+                    "AI = Machines with human-like intelligence",
+                    "Capable of learning, reasoning, and understanding",
+                    "Used in countless real-world applications"
+                ],
+                "voice_over": "Artificial Intelligence, or AI, is all about creating computer systems that can learn, reason, and solve problems—just like humans do! It's the secret sauce behind everything from smart assistants to self-driving cars."
+            },
+            {
+                "title": "Types of AI: Narrow, General, and Superintelligence",
+                "content": "AI comes in different flavors: Narrow AI, General AI, and Superintelligence.",
+                "key_points": [
+                    "Narrow AI: Specialized for specific tasks (like voice assistants)",
+                    "General AI: Hypothetical, human-level intelligence (doesn't exist yet!)",
+                    "Superintelligence: Theoretical, beyond human intelligence"
+                ],
+                "voice_over": "Not all AI is created equal! Most of what we see today is Narrow AI—great at specific tasks, like recommending your next favorite song. General AI, with true human-like smarts, is still a dream. And Superintelligence? That's science fiction... for now!"
+            },
+            {
+                "title": "Key AI Technologies",
+                "content": "AI is powered by cutting-edge technologies like Machine Learning, Deep Learning, NLP, and Computer Vision.",
+                "key_points": [
+                    "Machine Learning: Learns from data, improves over time",
+                    "Deep Learning: Uses neural networks for pattern recognition",
+                    "Natural Language Processing: Understands and generates human language",
+                    "Computer Vision: Interprets visual information"
+                ],
+                "voice_over": "Let’s break down the tech behind AI magic! Machine Learning lets systems learn from experience. Deep Learning takes it further, mimicking our brains to spot patterns. NLP helps machines chat and understand us, while Computer Vision lets them see the world. It’s a tech symphony!"
+            },
+            {
+                "title": "Common AI Applications",
+                "content": "AI is everywhere—from your daily apps to high-stakes professional fields.",
+                "key_points": [
+                    "Everyday: Search engines, social media, streaming, virtual assistants",
+                    "Professional: Medical diagnosis, fraud detection, autonomous vehicles, manufacturing, chatbots"
+                ],
+                "voice_over": "AI is woven into our daily lives—powering your search results, curating your social feeds, and even suggesting your next binge-watch! In the professional world, it’s revolutionizing medicine, finance, transportation, and more. The future is now!"
+            },
+            {
+                "title": "How AI Systems Learn",
+                "content": "AI learns in three main ways: Supervised, Unsupervised, and Reinforcement Learning.",
+                "key_points": [
+                    "Supervised: Learns from labeled data (like email spam filters)",
+                    "Unsupervised: Finds hidden patterns in unlabeled data",
+                    "Reinforcement: Learns by trial and error, guided by rewards"
+                ],
+                "voice_over": "Ever wondered how AI gets so smart? It’s all about learning! Supervised learning uses labeled data, unsupervised learning finds hidden patterns, and reinforcement learning learns from trial and error—just like playing a game!"
+            },
+            {
+                "title": "Key Concepts in AI",
+                "content": "Understand the building blocks: Algorithms, Training Data, Neural Networks, and Bias.",
+                "key_points": [
+                    "Algorithm: Set of rules for solving problems",
+                    "Training Data: Teaches AI systems",
+                    "Neural Networks: Inspired by the human brain",
+                    "Bias: Unfair outcomes from flawed data"
+                ],
+                "voice_over": "Let’s talk foundations! Algorithms are the recipes, training data is the ingredient list, and neural networks are the chefs. But beware—bias can sneak in, leading to unfair results. Building ethical AI starts here!"
+            },
+            {
+                "title": "Current Limitations of AI",
+                "content": "AI is powerful, but it’s not perfect. Here’s where it struggles.",
+                "key_points": [
+                    "Needs lots of quality data",
+                    "Lacks common sense and real-world understanding",
+                    "Often a 'black box'—hard to explain decisions",
+                    "Struggles to generalize to new situations"
+                ],
+                "voice_over": "AI is amazing, but it’s not magic. It needs tons of good data, sometimes makes silly mistakes, and can be a total mystery when it comes to explaining its decisions. Plus, it doesn’t always handle new situations well. There’s still work to do!"
+            },
+            {
+                "title": "The Future of AI",
+                "content": "AI is evolving fast! Here’s what’s next.",
+                "key_points": [
+                    "Smaller, more efficient models",
+                    "Better human-AI collaboration",
+                    "Improved safety and alignment",
+                    "Integration with robotics and IoT",
+                    "Transforming industries, jobs, research, and education"
+                ],
+                "voice_over": "The future is bright! AI models are getting faster and smarter, working alongside humans, and popping up in everything from robots to smart homes. It’s set to transform industries, boost scientific discovery, and even revolutionize healthcare and education. Buckle up!"
+            }
+        ],
+        "short_segments": [
+            {
+                "title": "What is AI? Explained in 60 Seconds",
+                "content": "AI means machines that can learn, reason, and solve problems—just like humans!",
+                "script": "Ever wondered what Artificial Intelligence really is? In a nutshell, AI is when computers can do things that usually need human smarts—like learning, solving problems, and understanding language. From your phone's assistant to self-driving cars, AI is everywhere!",
+                "duration": 60.0
+            },
+            {
+                "title": "Narrow AI vs. General AI vs. Superintelligence",
+                "content": "Discover the three types of AI: Narrow, General, and Superintelligence.",
+                "script": "Let’s break down the three types of AI! Narrow AI is what we have today—it’s great at specific tasks, like recognizing faces or recommending music. General AI, which could think and learn like a human, doesn’t exist yet. And Superintelligence? That’s the stuff of sci-fi, way beyond human brains!",
+                "duration": 75.0
+            },
+            {
+                "title": "How Does AI Learn?",
+                "content": "AI learns through supervised, unsupervised, and reinforcement learning.",
+                "script": "How does AI get so smart? It learns in three ways! Supervised learning uses labeled data—think of teaching a kid with flashcards. Unsupervised learning finds patterns on its own, like sorting puzzle pieces. And reinforcement learning? That’s trial and error, learning by playing and getting rewards!",
+                "duration": 80.0
+            },
+            {
+                "title": "AI in Everyday Life",
+                "content": "AI powers search engines, social media feeds, streaming recommendations, and virtual assistants.",
+                "script": "Did you know AI is part of your daily routine? It helps you find answers on Google, curates your social media feeds, recommends your next Netflix binge, and even powers voice assistants like Siri and Alexa. AI is everywhere—making life smarter and easier!",
+                "duration": 70.0
+            },
+            {
+                "title": "The Future of AI: What’s Next?",
+                "content": "AI is getting smarter, safer, and more integrated into our world.",
+                "script": "What’s next for AI? Expect smaller, faster models, smarter collaboration between humans and machines, and AI popping up in everything from robots to smart homes. It’s set to transform industries, boost research, and revolutionize healthcare and education. The future is now!",
+                "duration": 90.0
+            }
+        ],
+        "theme_colors": {
+            "primary": "#1E90FF",
+            "secondary": "#FFD700",
+            "accent": "#FF4081",
+            "background": "#F5F7FA",
+            "text": "#222222"
+        }
+    }
+]
