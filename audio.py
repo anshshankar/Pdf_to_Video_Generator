@@ -1,7 +1,7 @@
 import asyncio
 import edge_tts
 
-def generate_audio(script, output_file, voice="en-GB-RyanNeural", rate="+20%"):
+def generate_audio(script, output_file, voice="en-GB-RyanNeural", rate="+10%"):
     """
     Generate realistic speech with control over voice characteristics using edge-tts Python API.
 

@@ -17,6 +17,7 @@ from audio import generate_audio
 import time
 import requests
 import json
+import pandas as pd
 
 load_dotenv()
 
@@ -32,15 +33,8 @@ class SlideItem(BaseModel):
     key_points: List[str] = Field(default_factory=list)
     voice_over: str
 
-class ShortVideoSegment(BaseModel):
-    title: str
-    content: str
-    script: str
-    duration: float = 60.0  # Target duration in seconds
-
 class SlideChunk(BaseModel):
     slides: List[SlideItem]
-    short_segments: List[ShortVideoSegment] = Field(default_factory=list)
     theme_colors: Optional[Dict[str, str]] = None
 
 class VideoConfig(BaseModel):
@@ -53,23 +47,8 @@ class VideoConfig(BaseModel):
     aspect_ratio: str = "16:9"
     animation_level: str = "moderate"
 
-# Step 1: Extract PDF Content
-def extract_text_from_pdf(pdf_path):
-    print("Extracting text from PDF...")
-    doc = fitz.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    print("✅ Text extracted.")
-    return text
 
-def chunk_text(text, chunk_size=100000):
-    print("Chunking text...")
-    chunks = textwrap.wrap(text, chunk_size, break_long_words=False)
-    print(f"✅ Created {len(chunks)} chunks.")
-    return chunks
-
-def generate_chunk_content(chunk, config):
+def generate_chunk_content(topic, config):
     print("Generating structured content with OpenAI...")
     theme_desc = {
         "professional": "formal, corporate style with clean design",
@@ -84,17 +63,18 @@ def generate_chunk_content(chunk, config):
     }.get(config.voice_style, "clear and professional")
 
     prompt = (
-        f"Generate a structured presentation based on the following content. "
+        f"Generate a structured presentation based on the following topic. "
         f"Use a {theme_desc} visual approach and a {voice_desc} tone for narration.\n\n"
+        "You are to collect and explain all the core concepts, key facts, examples, and supporting points "
+        "related to the topic in simple, accessible language. Organize the content logically to enable a smooth, informative presentation.\n\n"
         "Create a JSON with these keys:\n"
         "1. 'slides': list of objects with 'title', 'content', 'key_points' (list of bullet points), "
         "and 'voice_over' (narration script for this specific slide)\n"
-        "2. 'short_segments': 3-5 stand-alone segments for short-form videos (under 2 minutes each) "
-        "with 'title', 'content', 'script', and 'duration' (in seconds) fields\n"
-        "3. 'theme_colors': suggested color scheme (primary, secondary, accent, background, text)\n\n"
-        f"Content:\n{chunk}\n\n"
-        "Respond with valid JSON only. Keep all content factual and based on the input material."
+        "2. 'theme_colors': suggested color scheme (primary, secondary, accent, background, text)\n\n"
+        f"Topic:\n{topic}\n\n"
+        "Respond with valid JSON only. Keep all content factual and written in easy-to-understand language, suitable for general audiences."
     )
+
 
     response = client.chat.completions.create(
         model="openai/gpt-4.1",
@@ -120,96 +100,106 @@ def generate_chunk_content(chunk, config):
     return validated_chunk
 
 
+EXCEL_FILE = "topics.xlsx"
+
 def main():
     args = Args()
     os.makedirs("Output", exist_ok=True)
-    config = VideoConfig(
-        theme=args.theme,
-        language=args.language,
-        voice_style=args.voice,
-        include_background_music=bool(args.music)
-    )
-    text = extract_text_from_pdf(args.pdf_path)
-    chunks = chunk_text(text)
-    results = [generate_chunk_content(chunk, config) for chunk in chunks]
 
-    serializable_results = [chunk.model_dump() for chunk in results]
+    while True:
+        # Load Excel file
+        if not os.path.exists(EXCEL_FILE):
+            print("❌ Excel file not found.")
+            break
 
-    with open("Output/chunk_results.json", "w", encoding="utf-8") as f:
-        json.dump(serializable_results, f, ensure_ascii=False, indent=4)
+        df = pd.read_excel(EXCEL_FILE)
 
-    # Flatten all slides from all chunks
-    all_slides = [slide for result in results for slide in result.slides]
+        if df.empty:
+            print("✅ All topics processed.")
+            break
 
-    # Generate presentation and slide images
-    ppt_file = "Output/presentation.pptx"
-    topic = generate_presentation(results, ppt_file, config)
+        row = df.iloc[0]
+        topic = row['topic_name']
+        subject = row['subject']
+        print(f"🎯 Processing topic: {topic} (Subject: {subject})")
 
-    intro_voice_over = f"Hey folks! Welcome back to the channel. Today, we’re diving into something super cool — {topic}. Let’s get into it!"
-    end_voice_over = "Thanks for hanging out with us! If you’re vibing with the content, hit that like button, share it with your crew, and smash that subscribe. Drop your thoughts or ideas in the comments — we love hearing from you!"
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        slide_imgs = slides_to_images(ppt_file, tmpdir)
-
-        clips = []
-
-        slide_img = slide_imgs[0]
-        audio_path = f"Output/intro_audio.mp3"
-        generate_audio(intro_voice_over,audio_path)
-        audio = AudioFileClip(audio_path)
-        image_clip = ImageClip(slide_img).set_duration(audio.duration)
-        final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
-        clips.append(final_clip)
-
-        for i, slide in enumerate(all_slides):
-            slide_img = slide_imgs[i+1]
-            audio_path = f"Output/{i}_audio.mp3"
-            generate_audio(slide.voice_over,audio_path)
-            audio = AudioFileClip(audio_path)
-            image_clip = ImageClip(slide_img).set_duration(audio.duration)
-           
-            final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
-            clips.append(final_clip)
-
-        slide_img = slide_imgs[-1]
-        audio_path = f"Output/ending_audio.mp3"
-        generate_audio(end_voice_over,audio_path)
-        audio = AudioFileClip(audio_path)
-        image_clip = ImageClip(slide_img).set_duration(audio.duration)
-        final_clip = CompositeVideoClip([image_clip]).set_audio(audio)
-        clips.append(final_clip)
-
-        # Concatenate all clips
-        final_video = concatenate_videoclips(clips, method="compose")
-        #final_video.write_videofile("final_video.mp4", fps=24)
-        final_video.write_videofile(
-                 "Output/final_video2.mp4",
-                 fps=24,
-                 codec="libx264",         # Good video codec
-                 audio_codec="aac",       # Ensure AAC audio
-                 audio_bitrate="192k"     # Reasonable audio quality
+        # Prepare config
+        config = VideoConfig(
+            theme=args.theme,
+            language=args.language,
+            voice_style=args.voice,
+            include_background_music=bool(args.music)
         )
-        print("✅ Main Video exported")
 
-        # # Generate YouTube Shorts
-        # shorts_config = VideoConfig(
-        #     theme=config.theme,
-        #     language=config.language,
-        #     voice_style=config.voice_style,
-        #     aspect_ratio="9:16"
-        # )
-        # process_shorts_from_results(results, shorts_config)
-        # print("✅ YouTube Shorts generated")
+        # Generate results
+        results = [generate_chunk_content(topic, config)]
+        serializable_results = [chunk.model_dump() for chunk in results]
+
+        with open("Output/chunk_results.json", "w", encoding="utf-8") as f:
+            json.dump(serializable_results, f, ensure_ascii=False, indent=4)
+
+        all_slides = [slide for result in results for slide in result.slides]
+
+        # Generate presentation
+        
+        os.makedirs(f"Output/{topic}", exist_ok=True)
+        ppt_file = f"Output/{topic}/presentation.pptx"
+        generate_presentation(results, ppt_file, config,topic)
+
+        # Create voice overs
+        intro_voice_over = f"Hey folks! Welcome back to the channel. Today, we’re diving into something super cool — {topic}. Let’s get into it!"
+        end_voice_over = "Thanks for learning with us! If you’re loving our content, hit that like button, share it with your friends, and smash that subscribe button. Drop your thoughts or ideas in the comments — we love hearing from you!"
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            slide_imgs = slides_to_images(ppt_file, tmpdir)
+
+            clips = []
+
+            # Intro
+            slide_img = slide_imgs[0]
+            audio_path = f"Output/{topic}/intro_audio.mp3"
+            generate_audio(intro_voice_over, audio_path)
+            audio = AudioFileClip(audio_path)
+            clips.append(ImageClip(slide_img).set_duration(audio.duration).set_audio(audio))
+
+            # Slides
+            for i, slide in enumerate(all_slides):
+                slide_img = slide_imgs[i + 1]
+                audio_path = f"Output/{topic}/{i}_audio.mp3"
+                generate_audio(slide.voice_over, audio_path)
+                audio = AudioFileClip(audio_path)
+                clips.append(ImageClip(slide_img).set_duration(audio.duration).set_audio(audio))
+
+            # Outro
+            slide_img = slide_imgs[-1]
+            audio_path = f"Output/{topic}/ending_audio.mp3"
+            generate_audio(end_voice_over, audio_path)
+            audio = AudioFileClip(audio_path)
+            clips.append(ImageClip(slide_img).set_duration(audio.duration).set_audio(audio))
+
+            # Final video
+            final_video = concatenate_videoclips(clips, method="compose")
+            final_video.write_videofile(
+                f"Output/{topic}/{topic}_final_video.mp4",
+                fps=24,
+                codec="libx264",
+                audio_codec="aac",
+                audio_bitrate="192k"
+            )
+            print(f"✅ Video for topic '{topic}' exported.")
+
+        # Remove the processed topic
+        df = df.drop(index=0)
+        df.to_excel(EXCEL_FILE, index=False)
+        print(f"🗑️ Topic '{topic}' removed from Excel.\n")
 
 class Args:
-    pdf_path = 'contents/Basics_of_Machine_Learning_Notes.pdf'
     avatar = '/content/man.png'
     music = '/contents/breath-of-life_10-minutes-320859.mp3'
     theme = 'creative'
     language = 'en'
     voice = 'enthusiastic'
     output = '/content/output/'
-    api_path = ''
 
 if __name__ == "__main__":
     main()
